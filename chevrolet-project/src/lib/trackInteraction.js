@@ -6,7 +6,7 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 /**
- * Solo acepta UUID válido (tabla cars). Rechaza objetos, IDs de Sanity, etc.
+ * Solo acepta UUID válido (tabla cars). Rechaza objetos y strings que no sean UUID.
  */
 export function sanitizeCarId(raw) {
   if (raw == null || typeof raw === 'object') return null
@@ -26,28 +26,33 @@ export function carIdFromLabel(cars, label) {
 }
 
 /**
- * Inserta en landing_interactions (requiere política RLS INSERT para rol anon en Supabase).
+ * Inserta en landing_interactions.
+ * Payload mínimo hacia PostgREST: car_id, event_type, metadata (sin columnas extra).
+ *
+ * - click_whatsapp: exige car_id; si falta, no hace POST (evita RLS / datos basura).
+ * - submit_lead: permite car_id null (ej. "Otro modelo"); igual se avisa en consola.
  */
 export async function insertLandingInteraction(partial) {
-  const carId = sanitizeCarId(partial.car_id)
+  const carId = sanitizeCarId(partial.car_id ?? partial.carId)
+  const eventType = partial.type ?? partial.event_type
 
-  const baseMeta =
+  if (!carId) {
+    console.error('¡CUIDADO! Intentando enviar un track sin ID de auto')
+  }
+
+  if (eventType === 'click_whatsapp' && !carId) {
+    return { data: null, error: new Error('click_whatsapp requiere car_id') }
+  }
+
+  const metadata =
     partial.metadata && typeof partial.metadata === 'object'
       ? { ...partial.metadata }
       : {}
 
-  const label = partial.car_label ?? partial.vehicle_name
-  if (label != null && String(label).trim() !== '') {
-    const t = String(label).trim()
-    baseMeta.car_label = t
-    baseMeta.vehicle_name = partial.vehicle_name?.trim() || t
-  }
-
-  /** Solo columnas del esquema mínimo (evita PGRST204 si no existen car_label/vehicle_name en BD). */
   const row = {
     car_id: carId,
-    event_type: partial.event_type,
-    metadata: baseMeta,
+    event_type: eventType,
+    metadata,
   }
 
   console.log('Datos a enviar:', row)

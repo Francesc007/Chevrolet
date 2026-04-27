@@ -50,7 +50,7 @@ export function normalizeCar(raw) {
         : null
 
   return {
-    id: raw.id ?? raw._id ?? '',
+    id: raw.id != null ? String(raw.id) : '',
     Marca: make,
     Modelo: model,
     Anio: raw.year ?? raw.Anio ?? null,

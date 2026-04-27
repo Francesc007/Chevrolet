@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { fetchCars, fetchReviews } from './lib/carApi'
-import { insertLandingInteraction, carIdFromLabel } from './lib/trackInteraction'
+import {
+  insertLandingInteraction,
+  carIdFromLabel,
+  sanitizeCarId,
+} from './lib/trackInteraction'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Phone, 
@@ -15,6 +19,13 @@ import {
   X,
   ChevronLeft
 } from 'lucide-react'
+
+const WA_PHONE = '529511931268'
+
+const waHrefForCar = (nombre) =>
+  `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(
+    `Hola Carlos Hernández, me interesa el ${nombre}.`,
+  )}`
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -56,6 +67,7 @@ const LandingPage = () => {
   }, [])
 
   const modelos = cars.filter(car => car.EsNuevo).map(car => ({
+    id: car.id,
     carId: car.id,
     nombre: `${car.Marca} ${car.Modelo}`,
     imagen: car.imagenes[0] || '',
@@ -73,6 +85,7 @@ const LandingPage = () => {
   }))
 
   const seminuevos = cars.filter(car => !car.EsNuevo).map(car => ({
+    id: car.id,
     carId: car.id,
     nombre: `${car.Marca} ${car.Modelo}`,
     año: car.Anio?.toString() || 'N/D',
@@ -220,16 +233,16 @@ const LandingPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     const carId = carIdFromLabel(cars, formData.modelo)
+    console.log('ID del auto seleccionado:', carId)
     const label = formData.modelo?.trim() || null
     await insertLandingInteraction({
-      event_type: 'submit_lead',
+      type: 'submit_lead',
       car_id: carId,
-      car_label: label,
-      vehicle_name: label,
       metadata: {
         nombre: formData.nombre,
         whatsapp: formData.whatsapp,
         modelo_interes: label,
+        car_label: label,
         source: 'formulario_contacto',
       },
     })
@@ -245,13 +258,21 @@ const LandingPage = () => {
     })
   }
 
-  const trackWhatsAppClick = (carLabel, carId = null) => {
+  /** `mappedCar`: objeto del .map() (modelos / seminuevos / modal) con `id` UUID de la API. */
+  const trackWhatsAppClick = (mappedCar) => {
+    const carId = sanitizeCarId(mappedCar?.id ?? mappedCar?.carId)
+    console.log('ID del auto seleccionado:', carId)
+    if (!carId) {
+      console.error('¡CUIDADO! Intentando enviar un track sin ID de auto')
+      return
+    }
     void insertLandingInteraction({
-      event_type: 'click_whatsapp',
+      type: 'click_whatsapp',
       car_id: carId,
-      car_label: carLabel,
-      vehicle_name: carLabel,
-      metadata: { source: 'whatsapp' },
+      metadata: {
+        source: 'whatsapp',
+        car_label: mappedCar?.nombre ?? null,
+      },
     })
   }
 
@@ -472,7 +493,7 @@ const LandingPage = () => {
           >
             {modelos.map((modelo, index) => (
               <motion.div
-                key={index}
+                key={modelo.id || `modelo-${index}`}
                 variants={staggerItem}
                 className="bg-gray-50 rounded-2xl overflow-hidden group hover:shadow-2xl transition-all duration-500 border border-gray-100"
               >
@@ -548,10 +569,13 @@ const LandingPage = () => {
                   </div>
 
                   <a
-                    href="#contacto"
+                    href={waHrefForCar(modelo.nombre)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackWhatsAppClick(modelo)}
                     className="w-full block text-center bg-gmcRed text-white py-3 rounded-lg hover:bg-red-900 transition-colors font-bold shadow-lg"
                   >
-                    Solicitar Información
+                    WhatsApp
                   </a>
                 </div>
               </motion.div>
@@ -653,10 +677,13 @@ const LandingPage = () => {
                     </div>
                   </div>
                   <a
-                    href="#contacto"
+                    href={waHrefForCar(vehiculo.nombre)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackWhatsAppClick(vehiculo)}
                     className="w-full block text-center bg-gray-900 text-white py-3 rounded-lg hover:bg-black transition-colors font-bold shadow-lg"
                   >
-                    Solicitar Información
+                    WhatsApp
                   </a>
                 </div>
               </motion.div>
@@ -803,9 +830,6 @@ const LandingPage = () => {
                   href="https://wa.me/529511931268?text=Hola%20Carlos%20Hernández,%20vi%20tu%20landing%20page%20y%20me%20gustaría%20recibir%20información."
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() =>
-                    trackWhatsAppClick('Sección contacto · WhatsApp', null)
-                  }
                   className="flex items-center gap-4 hover:text-gmcRed transition-colors font-bold text-gray-700"
                 >
                   <Phone className="w-6 h-6 text-gmcRed" />
@@ -1009,6 +1033,16 @@ const LandingPage = () => {
                     {currentImageIndex + 1} / {currentModel.imagenes.length}
                   </p>
                 )}
+                <a
+                  href={waHrefForCar(currentModel.nombre)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackWhatsAppClick(currentModel)}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-gmcRed px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800"
+                >
+                  <Phone className="h-4 w-4" />
+                  WhatsApp
+                </a>
               </div>
             </div>
           </motion.div>
@@ -1031,9 +1065,6 @@ const LandingPage = () => {
           href="https://wa.me/529511931268?text=Hola%20Carlos%20Hernández,%20vi%20tu%20landing%20page%20y%20me%20gustaría%20recibir%20información."
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() =>
-            trackWhatsAppClick('Botón flotante WhatsApp', null)
-          }
           className="relative flex items-center justify-center rounded-full p-4"
           style={{
             background:
