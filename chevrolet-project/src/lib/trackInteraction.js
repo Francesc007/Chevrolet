@@ -30,8 +30,9 @@ export function carIdFromLabel(cars, label) {
  * event_type, nombre, whatsapp, modelo_interes, car_id, car_label, metadata
  * (id y created_at los genera la BD).
  *
- * - click_whatsapp: exige car_id válido.
+ * - click_whatsapp: puede llevar car_id (tarjeta/modal) o null (contacto general / flotante).
  * - submit_lead: permite car_id null (ej. "Otro modelo").
+ * - view_vehicle: apertura del detalle/modal en la landing (car_id UUID).
  */
 export async function insertLandingInteraction(partial) {
   const carId = sanitizeCarId(partial.car_id ?? partial.carId)
@@ -71,10 +72,6 @@ export async function insertLandingInteraction(partial) {
 
   if (!carId) {
     console.error('¡CUIDADO! Intentando enviar un track sin ID de auto')
-  }
-
-  if (eventType === 'click_whatsapp' && !carId) {
-    return { data: null, error: new Error('click_whatsapp requiere car_id') }
   }
 
   const row = {

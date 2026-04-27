@@ -1,7 +1,10 @@
 /**
  * Cliente HTTP para el inventario del Dashboard (Next.js).
  * Usa NEXT_PUBLIC_API_URL (o VITE_API_URL) + /api/cars.
+ * Si la API no responde o viene vacía, se usa Supabase (mismas tablas `cars` / `reviews`).
  */
+
+import { supabase } from './supabaseClient'
 
 function apiBaseUrl() {
   const raw =
@@ -65,24 +68,42 @@ export function normalizeCar(raw) {
   }
 }
 
+async function fetchCarsFromSupabase() {
+  if (!supabase) {
+    console.warn('[carApi] fetchCarsFromSupabase: sin cliente Supabase')
+    return []
+  }
+  const { data, error } = await supabase
+    .from('cars')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) {
+    console.warn('[carApi] fetchCarsFromSupabase:', error.message)
+    return []
+  }
+  return (data || []).map(normalizeCar)
+}
+
 export async function fetchCars() {
   const base = apiBaseUrl()
-  if (!base) {
-    throw new Error(
-      'Define NEXT_PUBLIC_API_URL (o VITE_API_URL) apuntando al Dashboard, p. ej. http://localhost:3000'
-    )
+  if (base) {
+    try {
+      const res = await fetch(`${base}/api/cars`)
+      if (res.ok) {
+        const data = await res.json()
+        const rawList = Array.isArray(data?.cars)
+          ? data.cars
+          : Array.isArray(data)
+            ? data
+            : []
+        const list = rawList.map(normalizeCar)
+        if (list.length) return list
+      }
+    } catch (e) {
+      console.warn('[carApi] fetchCars: API no disponible, usando Supabase', e)
+    }
   }
-  const res = await fetch(`${base}/api/cars`)
-  if (!res.ok) {
-    throw new Error(`No se pudieron cargar los autos (${res.status})`)
-  }
-  const data = await res.json()
-  const rawList = Array.isArray(data?.cars)
-    ? data.cars
-    : Array.isArray(data)
-      ? data
-      : []
-  return rawList.map(normalizeCar)
+  return fetchCarsFromSupabase()
 }
 
 /**
@@ -115,23 +136,36 @@ export function normalizeReview(raw) {
   }
 }
 
-export async function fetchReviews() {
-  const base = apiBaseUrl()
-  if (!base) return []
-  try {
-    const res = await fetch(`${base}/api/reviews`, {
-      cache: 'no-store',
-      headers: { Accept: 'application/json' },
-    })
-    if (!res.ok) {
-      console.warn('[carApi] fetchReviews:', res.status, res.statusText)
-      return []
-    }
-    const data = await res.json()
-    const list = Array.isArray(data?.reviews) ? data.reviews : []
-    return list.map(normalizeReview)
-  } catch (e) {
-    console.warn('[carApi] fetchReviews error', e)
+async function fetchReviewsFromSupabase() {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) {
+    console.warn('[carApi] fetchReviewsFromSupabase:', error.message)
     return []
   }
+  return (data || []).map(normalizeReview)
+}
+
+export async function fetchReviews() {
+  const base = apiBaseUrl()
+  if (base) {
+    try {
+      const res = await fetch(`${base}/api/reviews`, {
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        const list = Array.isArray(data?.reviews) ? data.reviews : []
+        const mapped = list.map(normalizeReview)
+        if (mapped.length) return mapped
+      }
+    } catch (e) {
+      console.warn('[carApi] fetchReviews: API no disponible, usando Supabase', e)
+    }
+  }
+  return fetchReviewsFromSupabase()
 }

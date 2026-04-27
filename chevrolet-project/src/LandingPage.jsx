@@ -73,6 +73,10 @@ const LandingPage = () => {
     nombre: `${car.Marca} ${car.Modelo}`,
     imagen: car.imagenes[0] || '',
     imagenes: car.imagenes.length ? car.imagenes : [],
+    año: car.Anio != null ? String(car.Anio) : 'N/D',
+    kilometraje: car.Kilometraje
+      ? `${Number(car.Kilometraje).toLocaleString()} km`
+      : '0 km',
     aceleracion: car.Aceleracion || 'N/D',
     potencia: car.Potencia,
     motor: car.Motor || 'N/D',
@@ -135,6 +139,7 @@ const LandingPage = () => {
     setCurrentImageIndex(0)
     setModalOpen(true)
     document.body.style.overflow = 'hidden' // Prevenir scroll del body
+    trackVehicleView(modelo)
   }
 
   const closeModal = () => {
@@ -287,6 +292,36 @@ const LandingPage = () => {
     })
   }
 
+  const trackVehicleView = (item) => {
+    const raw = item?.id ?? item?.car_id ?? item?.carId ?? item?._id
+    const carId = sanitizeCarId(raw ?? null)
+    if (!carId) return
+    const etiquetaVehiculo =
+      item?.nombre ?? item?.name ?? item?.modelo ?? 'Desconocido'
+    void trackInteraction({
+      car_id: carId,
+      event_type: 'view_vehicle',
+      nombre: null,
+      whatsapp: null,
+      modelo_interes: etiquetaVehiculo,
+      car_label: etiquetaVehiculo,
+      metadata: { origen: 'landing_modal' },
+    })
+  }
+
+  /** WhatsApp sin vehículo concreto: bloque Contacto y botón flotante (misma trazabilidad). */
+  const trackGeneralWhatsAppClick = (origen) => {
+    void trackInteraction({
+      car_id: null,
+      event_type: 'click_whatsapp',
+      nombre: null,
+      whatsapp: null,
+      modelo_interes: null,
+      car_label: 'WhatsApp — contacto general',
+      metadata: { origen },
+    })
+  }
+
   return (
     <div className="bg-white text-gray-900">
       {loading && (
@@ -397,24 +432,26 @@ const LandingPage = () => {
           >
             Alianza Chevrolet, Buick y <span className="text-gmcRed">GMC</span>
           </motion.p>
-          <motion.p 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.6 }}
-            className="text-lg sm:text-xl text-white mb-12 font-bold bg-black/40 backdrop-blur-md inline-block px-6 py-3 rounded-xl border border-white/10 shadow-lg"
-          >
-            La innovación automotriz en el <span className="text-gmcRed underline decoration-2 underline-offset-4">Itsmo</span>
-          </motion.p>
-          <motion.a
-            href="#modelos"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-            className="inline-flex items-center gap-2 bg-gmcRed text-white px-8 py-4 rounded-full text-lg hover:bg-red-700 shadow-xl transition-all group font-bold"
-          >
-            Modelos Exclusivos
-            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </motion.a>
+          <div className="flex flex-col items-center gap-5">
+            <motion.p 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.6 }}
+              className="text-lg sm:text-xl text-white font-bold bg-black/40 backdrop-blur-md inline-block px-6 py-3 rounded-xl border border-white/10 shadow-lg"
+            >
+              La innovación automotriz en el <span className="text-gmcRed underline decoration-2 underline-offset-4">Itsmo</span>
+            </motion.p>
+            <motion.a
+              href="#contacto"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+              className="inline-flex items-center gap-2 bg-gmcRed text-white px-8 py-4 rounded-full text-lg hover:bg-red-700 shadow-xl transition-all group font-bold"
+            >
+              Agenda tu Cita Privada
+              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </motion.a>
+          </div>
         </div>
 
         {/* Scroll Indicator */}
@@ -584,9 +621,9 @@ const LandingPage = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => trackWhatsAppClick(modelo)}
-                    className="w-full block text-center bg-gmcRed text-white py-3 rounded-lg hover:bg-red-900 transition-colors font-bold shadow-lg"
+                    className="w-full block text-center bg-gmcRed text-white border-2 border-white py-3 rounded-lg font-bold shadow-lg transition-colors hover:bg-white hover:text-gmcRed hover:border-gmcRed"
                   >
-                    WhatsApp
+                    Solicitar Información
                   </a>
                 </div>
               </motion.div>
@@ -692,9 +729,9 @@ const LandingPage = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => trackWhatsAppClick(vehiculo)}
-                    className="w-full block text-center bg-gray-900 text-white py-3 rounded-lg hover:bg-black transition-colors font-bold shadow-lg"
+                    className="w-full block text-center bg-gmcRed text-white border-2 border-white py-3 rounded-lg font-bold shadow-lg transition-colors hover:bg-white hover:text-gmcRed hover:border-gmcRed"
                   >
-                    WhatsApp
+                    Solicitar Información
                   </a>
                 </div>
               </motion.div>
@@ -747,10 +784,10 @@ const LandingPage = () => {
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.8, ease: "easeInOut" }}
                   className={`${[
-                    "bg-gray-50 border-2 border-gmcRed/10",
-                    "bg-gray-50 border-2 border-chevroletGold/10",
-                    "bg-gray-50 border-2 border-gmcRed/10"
-                  ][currentTestimonioIndex % 3]} p-8 md:p-12 rounded-2xl shadow-xl`}
+                    "bg-gray-50 border-2 border-gmcRed/10 hover:border-gmcRed/28 hover:shadow-[0_0_0_1px_rgba(155,27,27,0.1),0_12px_36px_-12px_rgba(155,27,27,0.07)]",
+                    "bg-gray-50 border-2 border-chevroletGold/10 hover:border-chevroletGold/32 hover:shadow-[0_0_0_1px_rgba(180,150,70,0.12),0_12px_36px_-12px_rgba(180,150,70,0.06)]",
+                    "bg-gray-50 border-2 border-gmcRed/10 hover:border-gmcRed/28 hover:shadow-[0_0_0_1px_rgba(155,27,27,0.1),0_12px_36px_-12px_rgba(155,27,27,0.07)]",
+                  ][currentTestimonioIndex % 3]} p-8 md:p-12 rounded-2xl shadow-xl transition-[border-color,box-shadow] duration-300 ease-out`}
                 >
                   <div className="flex flex-col md:flex-row gap-8 items-center text-center md:text-left">
                     {/* Izquierda: Foto del usuario */}
@@ -841,6 +878,7 @@ const LandingPage = () => {
                   href="https://wa.me/529511931268?text=Hola%20Carlos%20Hernández,%20vi%20tu%20landing%20page%20y%20me%20gustaría%20recibir%20información."
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackGeneralWhatsAppClick('contacto_telefono')}
                   className="flex items-center gap-4 hover:text-gmcRed transition-colors font-bold text-gray-700"
                 >
                   <Phone className="w-6 h-6 text-gmcRed" />
@@ -859,7 +897,7 @@ const LandingPage = () => {
 
             <motion.div 
               {...fadeInUp}
-              className="bg-white p-8 rounded-2xl shadow-2xl border border-gray-100"
+              className="bg-white p-8 rounded-2xl shadow-2xl border border-gray-100 transition-[border-color,box-shadow] duration-300 ease-out hover:border-gmcRed/25 hover:shadow-[0_0_0_1px_rgba(155,27,27,0.08),0_16px_48px_-16px_rgba(155,27,27,0.07)]"
             >
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -1012,6 +1050,12 @@ const LandingPage = () => {
                   {currentModel.nombre}
                 </h3>
                 <div className="flex flex-wrap gap-4 text-sm md:text-base">
+                  <span className="text-chevroletGold font-bold">
+                    Año: {currentModel.año ?? 'N/D'}
+                  </span>
+                  <span className="text-chevroletGold font-bold">
+                    Kilometraje: {currentModel.kilometraje ?? 'N/D'}
+                  </span>
                   {currentModel.aceleracion &&
                     currentModel.aceleracion !== 'N/D' && (
                     <span className="text-chevroletGold font-bold">
@@ -1028,32 +1072,12 @@ const LandingPage = () => {
                       {currentModel.motor}
                     </span>
                   )}
-                  {currentModel.año && (
-                    <span className="text-chevroletGold font-bold">
-                      Año: {currentModel.año}
-                    </span>
-                  )}
-                  {currentModel.kilometraje && (
-                    <span className="text-chevroletGold font-bold">
-                      {currentModel.kilometraje}
-                    </span>
-                  )}
                 </div>
                 {currentModel.imagenes.length > 1 && (
                   <p className="text-gray-400 text-sm mt-2">
                     {currentImageIndex + 1} / {currentModel.imagenes.length}
                   </p>
                 )}
-                <a
-                  href={waHrefForCar(currentModel.nombre)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackWhatsAppClick(currentModel)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-gmcRed px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800"
-                >
-                  <Phone className="h-4 w-4" />
-                  WhatsApp
-                </a>
               </div>
             </div>
           </motion.div>
@@ -1076,6 +1100,7 @@ const LandingPage = () => {
           href="https://wa.me/529511931268?text=Hola%20Carlos%20Hernández,%20vi%20tu%20landing%20page%20y%20me%20gustaría%20recibir%20información."
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackGeneralWhatsAppClick('whatsapp_flotante')}
           className="relative flex items-center justify-center rounded-full p-4"
           style={{
             background:
