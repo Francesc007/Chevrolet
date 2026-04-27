@@ -26,15 +26,48 @@ export function carIdFromLabel(cars, label) {
 }
 
 /**
- * Inserta en landing_interactions.
- * Payload mínimo hacia PostgREST: car_id, event_type, metadata (sin columnas extra).
+ * Inserta en `landing_interactions` alineado a columnas:
+ * event_type, nombre, whatsapp, modelo_interes, car_id, car_label, metadata
+ * (id y created_at los genera la BD).
  *
- * - click_whatsapp: exige car_id; si falta, no hace POST (evita RLS / datos basura).
- * - submit_lead: permite car_id null (ej. "Otro modelo"); igual se avisa en consola.
+ * - click_whatsapp: exige car_id válido.
+ * - submit_lead: permite car_id null (ej. "Otro modelo").
  */
 export async function insertLandingInteraction(partial) {
   const carId = sanitizeCarId(partial.car_id ?? partial.carId)
   const eventType = partial.type ?? partial.event_type
+
+  const meta =
+    partial.metadata && typeof partial.metadata === 'object'
+      ? { ...partial.metadata }
+      : {}
+
+  const car_label =
+    partial.car_label ??
+    meta.car_label ??
+    null
+
+  const nombre =
+    partial.nombre ??
+    meta.nombre ??
+    null
+
+  const whatsapp =
+    partial.whatsapp ??
+    meta.whatsapp ??
+    null
+
+  const modelo_interes =
+    partial.modelo_interes ??
+    meta.modelo_interes ??
+    (car_label != null && String(car_label).trim() !== ''
+      ? String(car_label).trim()
+      : null)
+
+  delete meta.car_label
+  delete meta.nombre
+  delete meta.whatsapp
+  delete meta.modelo_interes
 
   if (!carId) {
     console.error('¡CUIDADO! Intentando enviar un track sin ID de auto')
@@ -44,18 +77,19 @@ export async function insertLandingInteraction(partial) {
     return { data: null, error: new Error('click_whatsapp requiere car_id') }
   }
 
-  const metadata =
-    partial.metadata && typeof partial.metadata === 'object'
-      ? { ...partial.metadata }
-      : {}
-
   const row = {
-    car_id: carId,
     event_type: eventType,
-    metadata,
+    car_id: carId,
+    car_label: car_label != null ? String(car_label).trim() || null : null,
+    nombre: nombre != null ? String(nombre).trim() || null : null,
+    whatsapp: whatsapp != null ? String(whatsapp).trim() || null : null,
+    modelo_interes:
+      modelo_interes != null ? String(modelo_interes).trim() || null : null,
+    metadata: Object.keys(meta).length > 0 ? meta : {},
   }
 
-  console.log('Datos a enviar:', row)
+  const datosActualizados = { ...row }
+  console.log('Datos a enviar:', datosActualizados)
 
   if (!supabase) {
     const err = new Error('Supabase no configurado (faltan VITE_SUPABASE_* en env)')
@@ -63,13 +97,16 @@ export async function insertLandingInteraction(partial) {
     return { data: null, error: err }
   }
 
+  // Sin .select(): devolver fila insertada exige permiso SELECT (anon a veces no lo tiene → 401/42501).
   const { data, error } = await supabase
     .from('landing_interactions')
-    .insert([row])
-    .select()
+    .insert([datosActualizados])
 
   if (error) console.error('ERROR DE SUPABASE:', error)
-  else console.log('ÉXITO:', data)
+  else console.log('ÉXITO: insert ejecutado (sin select)')
 
   return { data, error }
 }
+
+/** Alias explícito para llamadas tipo `trackInteraction({ ... })`. */
+export const trackInteraction = insertLandingInteraction

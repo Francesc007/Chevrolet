@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fetchCars, fetchReviews } from './lib/carApi'
 import {
   insertLandingInteraction,
+  trackInteraction,
   carIdFromLabel,
   sanitizeCarId,
 } from './lib/trackInteraction'
@@ -238,13 +239,11 @@ const LandingPage = () => {
     await insertLandingInteraction({
       type: 'submit_lead',
       car_id: carId,
-      metadata: {
-        nombre: formData.nombre,
-        whatsapp: formData.whatsapp,
-        modelo_interes: label,
-        car_label: label,
-        source: 'formulario_contacto',
-      },
+      nombre: formData.nombre,
+      whatsapp: formData.whatsapp,
+      modelo_interes: label,
+      car_label: label,
+      metadata: { source: 'formulario_contacto' },
     })
 
     const mensaje = `Hola Carlos Hernández, soy ${formData.nombre}. Estoy interesado en el ${formData.modelo}. Mi WhatsApp: ${formData.whatsapp}`
@@ -258,21 +257,33 @@ const LandingPage = () => {
     })
   }
 
-  /** `mappedCar`: objeto del .map() (modelos / seminuevos / modal) con `id` UUID de la API. */
-  const trackWhatsAppClick = (mappedCar) => {
-    const carId = sanitizeCarId(mappedCar?.id ?? mappedCar?.carId)
-    console.log('ID del auto seleccionado:', carId)
+  /**
+   * Tarjetas / modal pasan el objeto del .map() (`id`, `carId`, `nombre`, …).
+   * Acepta variantes `id` | `car_id` | `carId` | `_id` y valida UUID antes de enviar.
+   */
+  const trackWhatsAppClick = (item) => {
+    const raw =
+      item?.id ?? item?.car_id ?? item?.carId ?? item?._id
+    const carId = sanitizeCarId(raw ?? null)
+
+    console.log('ID detectado en el clic:', carId ?? raw ?? null)
+
     if (!carId) {
-      console.error('¡CUIDADO! Intentando enviar un track sin ID de auto')
+      console.error('❌ Error: El objeto clickeado no tiene ID:', item)
       return
     }
-    void insertLandingInteraction({
-      type: 'click_whatsapp',
+
+    const etiquetaVehiculo =
+      item?.nombre ?? item?.name ?? item?.modelo ?? 'Desconocido'
+
+    void trackInteraction({
       car_id: carId,
-      metadata: {
-        source: 'whatsapp',
-        car_label: mappedCar?.nombre ?? null,
-      },
+      event_type: 'click_whatsapp',
+      nombre: null,
+      whatsapp: null,
+      modelo_interes: etiquetaVehiculo,
+      car_label: etiquetaVehiculo,
+      metadata: { origen: 'landing_button' },
     })
   }
 
