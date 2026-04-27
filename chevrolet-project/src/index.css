@@ -25,6 +25,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Oculta scrollbar en carruseles horizontales (thumbnails modal) sin romper scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 #root {
   width: 100%;
   min-height: 100vh;

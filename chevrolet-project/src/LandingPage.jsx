@@ -193,11 +193,14 @@ const LandingPage = () => {
     return () => window.removeEventListener('keydown', handleKeyboard)
   }, [modalOpen, currentImageIndex, currentModel])
 
+  /** Viewport generoso en móvil para que las animaciones no queden a medias al hacer scroll */
+  const inViewDefault = { once: true, amount: 0.08, margin: '0px 0px -12% 0px' }
+
   /** Bloques sueltos: entrar al viewport sin quedarse en opacity 0 */
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, amount: 0.12 },
+    viewport: inViewDefault,
     transition: { duration: 0.8, ease: 'easeOut' },
   }
 
@@ -323,7 +326,7 @@ const LandingPage = () => {
   }
 
   return (
-    <div className="bg-white text-gray-900">
+    <div className="bg-white text-gray-900 min-w-0 overflow-x-hidden">
       {loading && (
         <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center">
           <motion.div
@@ -337,10 +340,10 @@ const LandingPage = () => {
       <motion.nav 
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="fixed top-0 w-full z-50 bg-white/40 backdrop-blur-sm border-b border-gray-200/20 border-t-2 border-t-gmcRed"
+        className="fixed top-0 w-full z-50 bg-white/40 backdrop-blur-sm border-b border-gray-200/20 border-t-2 border-t-gmcRed pt-[env(safe-area-inset-top,0px)]"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-24">
+          <div className="flex justify-between items-center min-h-[4.5rem] sm:h-24 py-2 sm:py-0">
             <div className="flex items-center gap-4">
               <button 
                 onClick={scrollToTop}
@@ -395,8 +398,8 @@ const LandingPage = () => {
         </div>
       </motion.nav>
 
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* Hero Section — min-h con dvh evita saltos con barra de direcciones en móvil */}
+      <section className="relative min-h-screen min-h-[100dvh] flex items-center justify-center overflow-hidden">
         {/* Hero Background Image */}
         <div className="absolute inset-0">
           <img 
@@ -409,7 +412,7 @@ const LandingPage = () => {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 text-center px-4 max-w-5xl">
+        <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto w-full pt-[max(6rem,env(safe-area-inset-top,0px)+4.5rem)] pb-16 sm:pb-20">
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -420,7 +423,7 @@ const LandingPage = () => {
               textShadow: "0 0 30px rgba(155, 27, 27, 0.8), 0 0 60px rgba(255, 255, 255, 0.4)",
               transition: { duration: 0.3, ease: "easeOut" }
             }}
-            className="font-brand text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight cursor-pointer text-white tracking-tighter"
+            className="font-brand text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-4 sm:mb-6 leading-[1.1] sm:leading-tight cursor-pointer text-white tracking-tighter break-words"
           >
             Carlos <span className="text-gmcRed">Hernández</span>
           </motion.h1>
@@ -428,7 +431,7 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.4 }}
-            className="font-sans text-2xl sm:text-3xl md:text-4xl text-gmcRed mb-4 font-bold"
+            className="font-sans text-lg sm:text-2xl md:text-3xl lg:text-4xl text-gmcRed mb-3 sm:mb-4 font-bold px-1 sm:px-0"
           >
             Alianza Chevrolet, Buick y <span className="text-gmcRed">GMC</span>
           </motion.p>
@@ -437,7 +440,7 @@ const LandingPage = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.6 }}
-              className="text-lg sm:text-xl text-white font-bold bg-black/40 backdrop-blur-md inline-block px-6 py-3 rounded-xl border border-white/10 shadow-lg"
+              className="text-base sm:text-lg md:text-xl text-white font-bold bg-black/40 backdrop-blur-md inline-block max-w-[min(100%,36rem)] px-4 sm:px-6 py-3 rounded-xl border border-white/10 shadow-lg"
             >
               La innovación automotriz en el <span className="text-gmcRed underline decoration-2 underline-offset-4">Itsmo</span>
             </motion.p>
@@ -446,7 +449,7 @@ const LandingPage = () => {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.8 }}
-              className="inline-flex items-center gap-2 bg-gmcRed text-white px-8 py-4 rounded-full text-lg hover:bg-red-700 shadow-xl transition-all group font-bold"
+              className="inline-flex items-center justify-center gap-2 bg-gmcRed text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg hover:bg-red-700 shadow-xl transition-all group font-bold w-full max-w-sm sm:w-auto"
             >
               Agenda tu Cita Privada
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -458,7 +461,7 @@ const LandingPage = () => {
         <motion.div 
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+          className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom,0px)+0.5rem)] left-1/2 transform -translate-x-1/2"
         >
           <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
             <div className="w-1 h-3 bg-white/50 rounded-full mt-2"></div>
@@ -467,16 +470,16 @@ const LandingPage = () => {
       </section>
 
       {/* El Estándar Carlos Hernández */}
-      <section id="servicios" className="py-24 px-4 bg-gray-50">
+      <section id="servicios" className="py-16 sm:py-24 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <motion.div 
             {...fadeInUp}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
-            <h2 className="font-brand text-4xl sm:text-5xl md:text-6xl font-black mb-4 text-gray-900 tracking-tighter">
+            <h2 className="font-brand text-3xl sm:text-5xl md:text-6xl font-black mb-4 text-gray-900 tracking-tighter px-1">
               El Estándar Carlos <span className="text-gmcRed">Hernández</span>
             </h2>
-            <p className="text-gmcRed text-xl max-w-2xl mx-auto font-bold">
+            <p className="text-gmcRed text-lg sm:text-xl max-w-2xl mx-auto font-bold px-2 text-pretty">
               Un servicio de concierge privado que redefine la innovación en movilidad
             </p>
           </motion.div>
@@ -485,8 +488,8 @@ const LandingPage = () => {
             variants={staggerParent}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.12 }}
-            className="grid md:grid-cols-3 gap-8"
+            viewport={inViewDefault}
+            className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8"
           >
             {servicios.map((servicio, index) => {
               // Diferentes estilos para cada cuadro usando los colores de la marca
@@ -518,16 +521,16 @@ const LandingPage = () => {
       </section>
 
       {/* Mi Selección Exclusiva */}
-      <section id="modelos" className="py-24 px-4 bg-white">
+      <section id="modelos" className="py-16 sm:py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div 
             {...fadeInUp}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
-            <h2 className="font-brand text-4xl sm:text-5xl md:text-6xl font-black mb-4 text-gray-900 tracking-tighter">
+            <h2 className="font-brand text-3xl sm:text-5xl md:text-6xl font-black mb-4 text-gray-900 tracking-tighter px-1">
               Mi Selección Exclusiva
             </h2>
-            <p className="text-gmcRed text-xl max-w-2xl mx-auto font-bold">
+            <p className="text-gmcRed text-lg sm:text-xl max-w-2xl mx-auto font-bold px-2 text-pretty">
               Modelos curados personalmente para el conductor más exigente
             </p>
           </motion.div>
@@ -536,8 +539,8 @@ const LandingPage = () => {
             variants={staggerParent}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.12 }}
-            className="grid md:grid-cols-3 gap-8"
+            viewport={inViewDefault}
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
           >
             {modelos.map((modelo, index) => (
               <motion.div
@@ -573,25 +576,25 @@ const LandingPage = () => {
                     </div>
                   )}
                 </div>
-                <div className="p-6">
-                  <h3 className="font-sans text-2xl font-bold mb-6 text-gray-900">{modelo.nombre}</h3>
-                  <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="text-center">
+                <div className="p-4 sm:p-6 min-w-0">
+                  <h3 className="font-sans text-lg sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900 break-words">{modelo.nombre}</h3>
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 min-w-0">
+                    <div className="text-center min-w-0">
                       <Zap className="w-5 h-5 text-gmcRed mx-auto mb-2" />
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">0-100</p>
-                      <p className="font-bold text-gray-900">{modelo.aceleracion}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500 uppercase font-bold tracking-wider">0-100</p>
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm break-words">{modelo.aceleracion}</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center min-w-0">
                       <Award className="w-5 h-5 text-gmcRed mx-auto mb-2" />
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Potencia</p>
-                      <p className="font-bold text-gray-900">
+                      <p className="text-[10px] sm:text-xs text-gray-500 uppercase font-bold tracking-wider">Potencia</p>
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm break-words">
                         {modelo.potencia != null ? `${modelo.potencia} HP` : 'N/D'}
                       </p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center min-w-0">
                       <Shield className="w-5 h-5 text-gmcRed mx-auto mb-2" />
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Motor</p>
-                      <p className="font-bold text-gray-900">{modelo.motor}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500 uppercase font-bold tracking-wider">Motor</p>
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm break-words leading-snug">{modelo.motor}</p>
                     </div>
                   </div>
 
@@ -633,16 +636,16 @@ const LandingPage = () => {
       </section>
 
       {/* Seminuevos Section */}
-      <section className="py-24 px-4 bg-gray-50">
+      <section className="py-16 sm:py-24 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <motion.div 
             {...fadeInUp}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
-            <h2 className="font-brand text-4xl sm:text-5xl md:text-6xl font-black mb-4 text-gray-900 tracking-tighter">
+            <h2 className="font-brand text-3xl sm:text-5xl md:text-6xl font-black mb-4 text-gray-900 tracking-tighter px-1">
               Seminuevos Certificados
             </h2>
-            <p className="text-gmcRed text-xl max-w-2xl mx-auto font-bold">
+            <p className="text-gmcRed text-lg sm:text-xl max-w-2xl mx-auto font-bold px-2 text-pretty">
               Vehículos premium con la garantía y el servicio Carlos Hernández
             </p>
           </motion.div>
@@ -651,8 +654,8 @@ const LandingPage = () => {
             variants={staggerParent}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.12 }}
-            className="grid md:grid-cols-3 gap-8"
+            viewport={inViewDefault}
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
           >
             {seminuevos.map((vehiculo, index) => (
               <motion.div
@@ -689,24 +692,24 @@ const LandingPage = () => {
                     </div>
                   )}
                 </div>
-                <div className="p-6">
-                  <h3 className="font-sans text-2xl font-bold mb-6 text-gray-900">{vehiculo.nombre}</h3>
+                <div className="p-4 sm:p-6 min-w-0">
+                  <h3 className="font-sans text-lg sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900 break-words">{vehiculo.nombre}</h3>
                   <div className="space-y-3 mb-6">
-                    <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                      <span className="text-gray-500 font-medium">Año</span>
-                      <span className="font-bold text-gray-900">{vehiculo.año}</span>
+                    <div className="flex justify-between items-center gap-3 pb-2 border-b border-gray-100 min-w-0">
+                      <span className="text-gray-500 font-medium shrink-0">Año</span>
+                      <span className="font-bold text-gray-900 text-right break-words">{vehiculo.año}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                      <span className="text-gray-500 font-medium">Kilometraje</span>
-                      <span className="font-bold text-gray-900">{vehiculo.kilometraje}</span>
+                    <div className="flex justify-between items-center gap-3 pb-2 border-b border-gray-100 min-w-0">
+                      <span className="text-gray-500 font-medium shrink-0">Kilometraje</span>
+                      <span className="font-bold text-gray-900 text-right break-words">{vehiculo.kilometraje}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                      <span className="text-gray-500 font-medium">Motor</span>
-                      <span className="font-bold text-gray-900">{vehiculo.motor}</span>
+                    <div className="flex justify-between items-center gap-3 pb-2 border-b border-gray-100 min-w-0">
+                      <span className="text-gray-500 font-medium shrink-0">Motor</span>
+                      <span className="font-bold text-gray-900 text-right break-words">{vehiculo.motor}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-2">
-                      <span className="text-gray-500 font-medium">Precio</span>
-                      <div className="text-right">
+                    <div className="flex justify-between items-start gap-3 pt-2 min-w-0">
+                      <span className="text-gray-500 font-medium shrink-0">Precio</span>
+                      <div className="text-right min-w-0">
                         {vehiculo.descuento > 0 ? (
                           <div className="flex flex-col">
                             <span className="text-gray-400 text-sm line-through">
@@ -757,16 +760,16 @@ const LandingPage = () => {
       </section>
 
       {/* Testimonios */}
-      <section className="py-24 px-4 bg-white">
+      <section className="py-16 sm:py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div 
             {...fadeInUp}
-            className="text-center mb-16"
+            className="text-center mb-10 sm:mb-16"
           >
-            <h2 className="font-brand text-4xl sm:text-5xl md:text-6xl font-black mb-4 text-gray-900 tracking-tighter">
+            <h2 className="font-brand text-3xl sm:text-5xl md:text-6xl font-black mb-4 text-gray-900 tracking-tighter px-1">
               Experiencias Reales
             </h2>
-            <p className="text-gmcRed text-xl font-bold">
+            <p className="text-gmcRed text-lg sm:text-xl font-bold px-2 max-w-3xl mx-auto text-pretty">
               Testimonios de clientes que confiaron en el estándar Carlos <span className="text-gmcRed">Hernández</span>
             </p>
           </motion.div>
@@ -787,28 +790,28 @@ const LandingPage = () => {
                     "bg-gray-50 border-2 border-gmcRed/10 hover:border-gmcRed/28 hover:shadow-[0_0_0_1px_rgba(155,27,27,0.1),0_12px_36px_-12px_rgba(155,27,27,0.07)]",
                     "bg-gray-50 border-2 border-chevroletGold/10 hover:border-chevroletGold/32 hover:shadow-[0_0_0_1px_rgba(180,150,70,0.12),0_12px_36px_-12px_rgba(180,150,70,0.06)]",
                     "bg-gray-50 border-2 border-gmcRed/10 hover:border-gmcRed/28 hover:shadow-[0_0_0_1px_rgba(155,27,27,0.1),0_12px_36px_-12px_rgba(155,27,27,0.07)]",
-                  ][currentTestimonioIndex % 3]} p-8 md:p-12 rounded-2xl shadow-xl transition-[border-color,box-shadow] duration-300 ease-out`}
+                  ][currentTestimonioIndex % 3]} p-5 sm:p-8 md:p-12 rounded-2xl shadow-xl transition-[border-color,box-shadow] duration-300 ease-out overflow-hidden`}
                 >
-                  <div className="flex flex-col md:flex-row gap-8 items-center text-center md:text-left">
+                  <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center text-center md:text-left min-w-0">
                     {/* Izquierda: Foto del usuario */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 w-full max-w-[200px] sm:max-w-[250px] mx-auto md:mx-0">
                       {testimonios[currentTestimonioIndex].imagen ? (
                         <img 
                           src={testimonios[currentTestimonioIndex].imagen} 
                           alt={testimonios[currentTestimonioIndex].nombre}
                           referrerPolicy="no-referrer"
-                          className="w-[250px] h-[250px] rounded-2xl object-cover border-4 border-white shadow-lg bg-gray-200"
+                          className="w-full aspect-square rounded-2xl object-cover border-4 border-white shadow-lg bg-gray-200"
                         />
                       ) : (
-                        <div className="w-[250px] h-[250px] rounded-2xl bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-2xl flex-shrink-0 border-4 border-white shadow-lg">
+                        <div className="w-full aspect-square rounded-2xl bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-2xl border-4 border-white shadow-lg">
                           {testimonios[currentTestimonioIndex].nombre.charAt(0)}
                         </div>
                       )}
                     </div>
 
                     {/* Derecha: Contenido y Divisiones */}
-                    <div className="flex-1 flex flex-col h-full">
-                      <div className="flex gap-1 mb-6 justify-center md:justify-start">
+                    <div className="flex-1 flex flex-col h-full min-w-0">
+                      <div className="flex gap-1 mb-4 sm:mb-6 justify-center md:justify-start flex-wrap">
                         {[...Array(5)].map((_, i) => (
                           <Star 
                             key={i} 
@@ -817,12 +820,12 @@ const LandingPage = () => {
                         ))}
                       </div>
                       
-                      <p className="text-xl md:text-2xl text-gray-700 mb-8 italic leading-relaxed font-medium">
+                      <p className="text-lg sm:text-xl md:text-2xl text-gray-700 mb-6 sm:mb-8 italic leading-relaxed font-medium break-words text-pretty">
                         &ldquo;{testimonios[currentTestimonioIndex].texto}&rdquo;
                       </p>
                       
                       <div className="mt-auto pt-6 border-t border-gray-200">
-                        <p className="font-bold text-2xl text-gray-900 mb-1">
+                        <p className="font-bold text-xl sm:text-2xl text-gray-900 mb-1 break-words">
                           {testimonios[currentTestimonioIndex].nombre}
                         </p>
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
@@ -862,14 +865,14 @@ const LandingPage = () => {
       </section>
 
       {/* Contacto */}
-      <section id="contacto" className="py-24 px-4 bg-gray-50">
+      <section id="contacto" className="py-16 sm:py-24 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div {...fadeInUp}>
-              <h2 className="font-brand text-4xl sm:text-5xl md:text-6xl font-black mb-6 text-gray-900 tracking-tighter">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <motion.div {...fadeInUp} className="min-w-0">
+              <h2 className="font-brand text-3xl sm:text-5xl md:text-6xl font-black mb-4 sm:mb-6 text-gray-900 tracking-tighter">
                 Agenda tu Cita <span className="text-gmcRed">Personalizada</span>
               </h2>
-              <p className="text-gmcRed text-xl mb-8 leading-relaxed font-bold">
+              <p className="text-gmcRed text-lg sm:text-xl mb-6 sm:mb-8 leading-relaxed font-bold text-pretty">
                 Permíteme guiarte en la adquisición de tu próximo Chevrolet, Buick o GMC. 
                 Una conversación privada sin compromisos para entender tus necesidades.
               </p>
@@ -897,7 +900,7 @@ const LandingPage = () => {
 
             <motion.div 
               {...fadeInUp}
-              className="bg-white p-8 rounded-2xl shadow-2xl border border-gray-100 transition-[border-color,box-shadow] duration-300 ease-out hover:border-gmcRed/25 hover:shadow-[0_0_0_1px_rgba(155,27,27,0.08),0_16px_48px_-16px_rgba(155,27,27,0.07)]"
+              className="bg-white p-5 sm:p-8 rounded-2xl shadow-2xl border border-gray-100 transition-[border-color,box-shadow] duration-300 ease-out hover:border-gmcRed/25 hover:shadow-[0_0_0_1px_rgba(155,27,27,0.08),0_16px_48px_-16px_rgba(155,27,27,0.07)] min-w-0"
             >
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -941,7 +944,7 @@ const LandingPage = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-gmcRed text-white font-black py-4 rounded-lg hover:bg-red-900 shadow-xl transition-all flex items-center justify-center gap-2 group uppercase tracking-widest"
+                  className="w-full bg-gmcRed text-white font-black py-3.5 sm:py-4 rounded-lg hover:bg-red-900 shadow-xl transition-all flex items-center justify-center gap-2 group uppercase tracking-widest text-sm sm:text-base"
                 >
                   Agendar Cita Personalizada
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -953,11 +956,11 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-gray-100 bg-white">
+      <footer className="py-10 sm:py-12 px-4 border-t border-gray-100 bg-white pb-[max(2.5rem,env(safe-area-inset-bottom,0px)+1.5rem)]">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="font-brand text-2xl font-black mb-2 text-gray-900 tracking-tighter">Carlos Hernández</p>
-          <p className="text-gmcRed font-bold mb-4">Asesor de venta Senior | Chevrolet, Buick y GMC</p>
-          <p className="text-sm text-gray-400 font-medium">
+          <p className="font-brand text-xl sm:text-2xl font-black mb-2 text-gray-900 tracking-tighter">Carlos Hernández</p>
+          <p className="text-gmcRed font-bold mb-4 text-sm sm:text-base px-2">Asesor de venta Senior | Chevrolet, Buick y GMC</p>
+          <p className="text-xs sm:text-sm text-gray-400 font-medium max-w-lg mx-auto text-pretty px-2">
             Todo Oaxaca | © {new Date().getFullYear()} Todos los derechos reservados. 
             Las marcas Chevrolet, Buick y GMC son propiedad de General Motors.
           </p>
@@ -972,22 +975,26 @@ const LandingPage = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeModal}
-            className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-3 sm:p-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] overflow-y-auto overscroll-contain"
           >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                closeModal()
+              }}
+              className="fixed top-[max(0.5rem,env(safe-area-inset-top,0px))] right-[max(0.5rem,env(safe-area-inset-right,0px))] z-[110] rounded-full p-2 text-white hover:text-gmcRed hover:bg-white/10 transition-colors"
+              aria-label="Cerrar"
+            >
+              <X className="w-7 h-7 sm:w-8 sm:h-8" />
+            </button>
             <div 
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-5xl w-full max-h-[90vh] flex flex-col"
+              className="relative max-w-5xl w-full max-h-[min(90dvh,90vh)] my-auto flex flex-col min-h-0"
             >
-              {/* Botón Cerrar */}
-              <button
-                onClick={closeModal}
-                className="absolute -top-12 right-0 text-white hover:text-gmcRed transition-colors z-10"
-              >
-                <X className="w-8 h-8" />
-              </button>
 
               {/* Contenedor de Imagen */}
-              <div className="relative bg-black rounded-lg overflow-hidden">
+              <div className="relative bg-black rounded-lg overflow-hidden shrink-0">
                 <motion.img
                   key={currentImageIndex}
                   initial={{ opacity: 0 }}
@@ -996,7 +1003,7 @@ const LandingPage = () => {
                   transition={{ duration: 0.3 }}
                   src={currentModel.imagenes[currentImageIndex]}
                   alt={currentModel.nombre}
-                  className="w-full h-auto max-h-[80vh] object-contain"
+                  className="w-full h-auto max-h-[min(70vh,70dvh)] sm:max-h-[80vh] object-contain mx-auto"
                 />
 
                 {/* Botones de Navegación */}
@@ -1006,7 +1013,7 @@ const LandingPage = () => {
                     {currentImageIndex > 0 && (
                       <button
                         onClick={prevImage}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
+                        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-3 rounded-full transition-all touch-manipulation"
                       >
                         <ChevronLeft className="w-6 h-6" />
                       </button>
@@ -1016,7 +1023,7 @@ const LandingPage = () => {
                     {currentImageIndex < currentModel.imagenes.length - 1 && (
                       <button
                         onClick={nextImage}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
+                        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-3 rounded-full transition-all touch-manipulation"
                       >
                         <ChevronRight className="w-6 h-6" />
                       </button>
@@ -1045,11 +1052,11 @@ const LandingPage = () => {
               </div>
 
               {/* Información del Modelo */}
-              <div className="mt-4 text-white">
-                <h3 className="font-sans text-2xl md:text-3xl font-bold mb-2">
+              <div className="mt-3 sm:mt-4 text-white shrink-0 pb-2">
+                <h3 className="font-sans text-xl sm:text-2xl md:text-3xl font-bold mb-2 break-words">
                   {currentModel.nombre}
                 </h3>
-                <div className="flex flex-wrap gap-4 text-sm md:text-base">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs sm:text-sm md:text-base">
                   <span className="text-chevroletGold font-bold">
                     Año: {currentModel.año ?? 'N/D'}
                   </span>
@@ -1086,7 +1093,7 @@ const LandingPage = () => {
 
       {/* Floating WhatsApp — rojo intenso + anillo con pulso */}
       <motion.div
-        className="fixed bottom-8 right-8 z-50"
+        className="fixed z-50 bottom-[max(1rem,env(safe-area-inset-bottom,0px)+0.25rem)] right-[max(1rem,env(safe-area-inset-right,0px)+0.25rem)] sm:bottom-8 sm:right-8"
         initial={{ scale: 0, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{
